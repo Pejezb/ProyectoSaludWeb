@@ -1,0 +1,26 @@
+// schema.prisma
+
+datasource db {
+  provider = "postgresql" // o "mysql", "sqlite", según tu DB
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Appointment {
+  id          Int       @id @default(autoincrement())
+  patientName String
+  doctorName  String
+  date        DateTime
+  status      AppointmentStatus @default(PENDING)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+enum AppointmentStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+}
