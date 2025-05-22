@@ -1,3 +1,5 @@
+'use client'
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { CalendarDateRangePicker } from "@/components/date-range-picker"
 import { Overview } from "@/components/overview"
@@ -5,8 +7,13 @@ import { RecentAppointments } from "@/components/recent-appointments"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { PlusCircle, Users, Calendar, FileText, Brain } from "lucide-react"
+import useStorage from "@/hooks/useLocalStorage"
 
 export default function DoctorDashboard() {
+
+  const { data: appointmentData, isLoading: appointmentLoad } = useStorage("appointments", []);
+  const { data: pacientsData, isLoading: pacientsLoad } = useStorage("pacients", []);
+
   return (
     <div className="flex-1 space-y-4">
       <div className="flex items-center justify-between space-y-2">
@@ -21,7 +28,9 @@ export default function DoctorDashboard() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">42</div>
+            <div className="text-2xl font-bold">
+              {pacientsLoad ? "0" : pacientsData.length}
+            </div>
             <p className="text-xs text-muted-foreground">+2 desde el mes pasado</p>
           </CardContent>
         </Card>
@@ -31,7 +40,9 @@ export default function DoctorDashboard() {
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">12</div>
+            <div className="text-2xl font-bold">
+              {appointmentLoad ? "0" : appointmentData.length}
+              </div>
             <p className="text-xs text-muted-foreground">Para esta semana</p>
           </CardContent>
         </Card>
@@ -41,7 +52,9 @@ export default function DoctorDashboard() {
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">5</div>
+            <div className="text-2xl font-bold">
+              {pacientsLoad ? "0" : pacientsData.length}
+            </div>
             <p className="text-xs text-muted-foreground">Por completar</p>
           </CardContent>
         </Card>
