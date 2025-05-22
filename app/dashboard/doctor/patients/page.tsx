@@ -25,8 +25,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import useStorage from "@/hooks/useLocalStorage"
 
 export default function PatientsPage() {
+
+  const { data, isLoading, isError, saveData } = useStorage("patients", []);
+
   // Cargar pacientes desde localStorage
   const [patients, setPatients] = useState(() => {
     if (typeof window !== "undefined") {
