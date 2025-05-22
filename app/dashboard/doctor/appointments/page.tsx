@@ -1,75 +1,107 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { Clock, Filter, PlusCircle, Download, Store } from "lucide-react"
+import { useEffect, useState } from "react";
+import { Clock, Filter, PlusCircle, Download, Store, LoaderCircle } from "lucide-react";
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import useStorage from "@/hooks/useLocalStorage";
 
 export default function AppointmentsPage() {
-  const [view, setView] = useState("list")
-  const [statusFilter, setStatusFilter] = useState("all")
-  const [appointments, setAppointments] = useState([])
+  const { data, isLoading, isError, saveData } = useStorage("appointments", []);
+  console.log("data", data, isLoading);
+  const [view, setView] = useState("list");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [appointments, setAppointments] = useState(data);
   const [newAppointment, setNewAppointment] = useState({
     name: "",
     date: "",
     time: "",
     duration: "30",
     type: "",
-    status: "Proximo"
-  })
-  const [editingIndex, setEditingIndex] = useState(null)
-  const [dialogOpen, setDialogOpen] = useState(false)
+    status: "Proximo",
+  });
+  const [editingIndex, setEditingIndex] = useState(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
-  useEffect(() => {
-    const stored = localStorage.getItem("appointments")
-    console.log(stored)
-    if (stored) setAppointments(JSON.parse(stored))
-  }, [])
+  // useEffect(() => {
+  //   const stored = localStorage.getItem("appointments")
+  //   if (stored) setAppointments(JSON.parse(stored))
+  // }, [])
 
-  useEffect(() => {
-    localStorage.setItem("appointments", JSON.stringify(appointments))
-  }, [appointments])
+  // useEffect(() => {
+  //   localStorage.setItem("appointments", JSON.stringify(appointments))
+  // }, [appointments])
 
   const handleSaveAppointment = () => {
     if (editingIndex !== null) {
-      const updated = [...appointments]
-      updated[editingIndex] = newAppointment
-      setAppointments(updated)
-      setEditingIndex(null)
+      const updated = [...appointments];
+      updated[editingIndex] = newAppointment;
+      setAppointments(updated);
+      saveData(updated);
+      setEditingIndex(null);
     } else {
-      setAppointments([newAppointment, ...appointments])
+      setAppointments([newAppointment, ...appointments]);
+      saveData([newAppointment, ...appointments]);
     }
-    setNewAppointment({ name: "", date: "", time: "", duration: "30", type: "", status: "Proximo" })
-    setDialogOpen(false)
-  }
+    setNewAppointment({
+      name: "",
+      date: "",
+      time: "",
+      duration: "30",
+      type: "",
+      status: "Proximo",
+    });
+    setDialogOpen(false);
+  };
 
   const handleEditAppointment = (index) => {
-    setEditingIndex(index)
-    setNewAppointment(appointments[index])
-    setDialogOpen(true)
-  }
+    setEditingIndex(index);
+    setNewAppointment(appointments[index]);
+    setDialogOpen(true);
+  };
 
   const handleCancelAppointment = (index) => {
-    const updated = [...appointments]
-    updated[index].status = "Cancelado"
-    setAppointments(updated)
-  }
+    const updated = [...appointments];
+    updated[index].status = "Cancelado";
+    setAppointments(updated);
+    saveData(updated);
+  };
 
   const handleDeleteAppointment = (index) => {
-    const updated = [...appointments]
-    updated.splice(index, 1)
-    setAppointments(updated)
-  }
+    const updated = [...appointments];
+    updated.splice(index, 1);
+    setAppointments(updated);
+    saveData(updated);
+  };
 
-  const filteredAppointments = statusFilter === "all"
-    ? appointments
-    : appointments.filter(app => app.status === statusFilter)
+  const filteredAppointments =
+    statusFilter === "all"
+      ? data
+      : data.filter((app) => app.status === statusFilter);
 
   return (
     <div className="flex flex-col min-h-screen space-y-4 px-4 md:px-6 pb-10 bg-black text-white">
@@ -85,7 +117,9 @@ export default function AppointmentsPage() {
             </DialogTrigger>
             <DialogContent className="bg-gray-900 text-white">
               <DialogHeader>
-                <DialogTitle>{editingIndex !== null ? "Editar Cita" : "Crear Nueva Cita"}</DialogTitle>
+                <DialogTitle>
+                  {editingIndex !== null ? "Editar Cita" : "Crear Nueva Cita"}
+                </DialogTitle>
               </DialogHeader>
               <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
@@ -93,7 +127,12 @@ export default function AppointmentsPage() {
                   <Input
                     className="bg-gray-800 text-white border-gray-700"
                     value={newAppointment.name}
-                    onChange={(e) => setNewAppointment({ ...newAppointment, name: e.target.value })}
+                    onChange={(e) =>
+                      setNewAppointment({
+                        ...newAppointment,
+                        name: e.target.value,
+                      })
+                    }
                   />
                 </div>
                 <div className="grid gap-2">
@@ -102,7 +141,12 @@ export default function AppointmentsPage() {
                     type="date"
                     className="bg-gray-800 text-white border-gray-700"
                     value={newAppointment.date}
-                    onChange={(e) => setNewAppointment({ ...newAppointment, date: e.target.value })}
+                    onChange={(e) =>
+                      setNewAppointment({
+                        ...newAppointment,
+                        date: e.target.value,
+                      })
+                    }
                   />
                 </div>
                 <div className="grid gap-2">
@@ -111,14 +155,21 @@ export default function AppointmentsPage() {
                     type="time"
                     className="bg-gray-800 text-white border-gray-700"
                     value={newAppointment.time}
-                    onChange={(e) => setNewAppointment({ ...newAppointment, time: e.target.value })}
+                    onChange={(e) =>
+                      setNewAppointment({
+                        ...newAppointment,
+                        time: e.target.value,
+                      })
+                    }
                   />
                 </div>
                 <div className="grid gap-2">
                   <Label>Duración</Label>
                   <Select
                     value={newAppointment.duration}
-                    onValueChange={(value) => setNewAppointment({ ...newAppointment, duration: value })}
+                    onValueChange={(value) =>
+                      setNewAppointment({ ...newAppointment, duration: value })
+                    }
                   >
                     <SelectTrigger className="bg-gray-800 text-white border-gray-700">
                       <SelectValue placeholder="Seleccionar duración" />
@@ -135,14 +186,21 @@ export default function AppointmentsPage() {
                   <Input
                     className="bg-gray-800 text-white border-gray-700"
                     value={newAppointment.type}
-                    onChange={(e) => setNewAppointment({ ...newAppointment, type: e.target.value })}
+                    onChange={(e) =>
+                      setNewAppointment({
+                        ...newAppointment,
+                        type: e.target.value,
+                      })
+                    }
                   />
                 </div>
                 <div className="grid gap-2">
                   <Label>Estado</Label>
                   <Select
                     value={newAppointment.status}
-                    onValueChange={(value) => setNewAppointment({ ...newAppointment, status: value })}
+                    onValueChange={(value) =>
+                      setNewAppointment({ ...newAppointment, status: value })
+                    }
                   >
                     <SelectTrigger className="bg-gray-800 text-white border-gray-700">
                       <SelectValue />
@@ -154,23 +212,31 @@ export default function AppointmentsPage() {
                     </SelectContent>
                   </Select>
                 </div>
-                <Button onClick={handleSaveAppointment} className="bg-teal-600 hover:bg-teal-700">
+                <Button
+                  onClick={handleSaveAppointment}
+                  className="bg-teal-600 hover:bg-teal-700"
+                >
                   {editingIndex !== null ? "Guardar Cambios" : "Crear Cita"}
                 </Button>
               </div>
             </DialogContent>
           </Dialog>
-          <Button variant="outline" className="border-gray-600 text-white hover:bg-gray-700">
+          <Button
+            variant="outline"
+            className="border-gray-600 text-white hover:bg-gray-700"
+          >
             <Download className="mr-2 h-4 w-4" />
             Exportar
           </Button>
         </div>
       </div>
 
-      <Card className="w-full flex flex-col flex-grow bg-gray-900 text-white border-gray-700">
+      <Card className="w-full flex flex-col flex-grow bg-card text-white border-gray-700">
         <CardHeader>
           <CardTitle>Gestionar Citas</CardTitle>
-          <CardDescription>Ver, programar y gestionar citas de pacientes</CardDescription>
+          <CardDescription>
+            Ver, programar y gestionar citas de pacientes
+          </CardDescription>
           <div className="flex flex-col sm:flex-row items-center gap-4 pt-4">
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-[180px] bg-gray-800 text-white border-gray-700">
@@ -195,22 +261,36 @@ export default function AppointmentsPage() {
           </div>
         </CardHeader>
 
-        <CardContent className="overflow-auto">
-          {filteredAppointments.length === 0 ? (
-            <p className="text-center py-10 text-gray-400">No hay citas que mostrar.</p>
-          ) : (
-            filteredAppointments.map((appointment, index) => (
-              <div
-                key={index}
-                className="flex justify-between items-center border-b border-gray-700 py-2"
-              >
-                <div>
-                  <p className="font-semibold">{appointment.name}</p>
-                  <p className="text-sm text-gray-400">
-                    {appointment.date} {appointment.time} - {appointment.duration} min
-                  </p>
-                  <p className="text-sm italic text-gray-400">{appointment.type}</p>
-                  <p className={`text-xs font-semibold mt-1
+        {isLoading && (
+          <div className="flex items-center justify-center py-10">
+            <LoaderCircle className="animate-spin h-8 w-8 text-gray-400" />
+          </div>
+        )}
+
+        {!isLoading && (
+          <>
+            <CardContent className="overflow-auto">
+              {filteredAppointments.length === 0 ? (
+                <p className="text-center py-10 text-gray-400">
+                  No hay citas que mostrar.
+                </p>
+              ) : (
+                filteredAppointments.map((appointment, index) => (
+                  <div
+                    key={index}
+                    className="flex justify-between items-center border-b border-gray-700 py-2"
+                  >
+                    <div>
+                      <p className="font-semibold">{appointment.name}</p>
+                      <p className="text-sm text-gray-400">
+                        {appointment.date} {appointment.time} -{" "}
+                        {appointment.duration} min
+                      </p>
+                      <p className="text-sm italic text-gray-400">
+                        {appointment.type}
+                      </p>
+                      <p
+                        className={`text-xs font-semibold mt-1
                     ${
                       appointment.status === "Proximo"
                         ? "text-green-400"
@@ -220,44 +300,46 @@ export default function AppointmentsPage() {
                         ? "text-blue-400"
                         : "text-gray-400"
                     }
-                  `}>
-                    {appointment.status}
-                  </p>
-                </div>
-                <div className="flex gap-2">
-                  {appointment.status !== "Cancelado" ? (
-                    <>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleEditAppointment(index)}
+                  `}
                       >
-                        Editar
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => handleCancelAppointment(index)}
-                      >
-                        Cancelar
-                      </Button>
-                    </>
-                  ) : (
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      onClick={() => handleDeleteAppointment(index)}
-                    >
-                      Eliminar
-                    </Button>
-                  )}
-                </div>
-              </div>
-            ))
-          )}
-        </CardContent>
+                        {appointment.status}
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      {appointment.status !== "Cancelado" ? (
+                        <>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleEditAppointment(index)}
+                          >
+                            Editar
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => handleCancelAppointment(index)}
+                          >
+                            Cancelar
+                          </Button>
+                        </>
+                      ) : (
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => handleDeleteAppointment(index)}
+                        >
+                          Eliminar
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
+            </CardContent>
+          </>
+        )}
       </Card>
     </div>
-  )
+  );
 }
-  
