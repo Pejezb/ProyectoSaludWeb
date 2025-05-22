@@ -184,7 +184,7 @@ export default function AppointmentsPage() {
                 <SelectItem value="Completada">Completadas</SelectItem>
               </SelectContent>
             </Select>
-            <Tabs value={view} onValueChange={setView} className="w-full sm:w-[900px]">
+            <Tabs value={view} onValueChange={setView} className="w-full">
               <TabsList className="grid w-full grid-cols-1">
                 <TabsTrigger value="list">
                   <Clock className="mr-2 h-4 w-4" />
