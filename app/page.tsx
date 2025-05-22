@@ -83,7 +83,7 @@ export default function Home() {
                   alt="Dr. Juan Martínez"
                   className="aspect-square overflow-hidden rounded-xl object-cover object-center"
                   height="400"
-                  src="/placeholder.svg?height=400&width=400"
+                  src="/placeholder.jpg?height=400&width=400"
                   width="400"
                 />
               </div>
@@ -228,7 +228,7 @@ export default function Home() {
                   alt="Dr. Juan Martínez en su consulta"
                   className="aspect-square overflow-hidden rounded-xl object-cover object-center"
                   height="400"
-                  src="/placeholder.svg?height=400&width=400"
+                  src="/placeholder-logo.png?height=400&width=400"
                   width="400"
                 />
               </div>

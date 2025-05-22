@@ -1,7 +1,6 @@
-// schema.prisma
 
 datasource db {
-  provider = "postgresql" // o "mysql", "sqlite", según tu DB
+  provider = "postgresql" 
   url      = env("DATABASE_URL")
 }
 

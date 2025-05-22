@@ -1,73 +1,105 @@
 "use client"
 
-import { useState } from "react"
-import { PlusCircle, Search, Filter, Download } from "lucide-react"
-import Link from "next/link"
-
+import { useState, useEffect } from "react"
+import { PlusCircle, Download, Pencil, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-
-// Datos simulados de pacientes
-const patients = [
-  {
-    id: "1",
-    name: "Carlos García",
-    email: "carlos.garcia@ejemplo.com",
-    phone: "(555) 123-4567",
-    lastAppointment: "15-04-2023",
-    nextAppointment: "10-05-2023",
-    status: "Activo",
-    condition: "Secuelas de ACV",
-  },
-  {
-    id: "2",
-    name: "María López",
-    email: "maria.lopez@ejemplo.com",
-    phone: "(555) 987-6543",
-    lastAppointment: "20-04-2023",
-    nextAppointment: "18-05-2023",
-    status: "Activo",
-    condition: "Deterioro cognitivo leve",
-  },
-  {
-    id: "3",
-    name: "Miguel Rodríguez",
-    email: "miguel.r@ejemplo.com",
-    phone: "(555) 456-7890",
-    lastAppointment: "10-04-2023",
-    nextAppointment: null,
-    status: "Inactivo",
-    condition: "TDAH",
-  },
-  {
-    id: "4",
-    name: "Ana Martínez",
-    email: "ana.m@ejemplo.com",
-    phone: "(555) 789-0123",
-    lastAppointment: "25-04-2023",
-    nextAppointment: "25-05-2023",
-    status: "Activo",
-    condition: "Dislexia",
-  },
-  {
-    id: "5",
-    name: "Roberto Fernández",
-    email: "roberto.f@ejemplo.com",
-    phone: "(555) 234-5678",
-    lastAppointment: "05-04-2023",
-    nextAppointment: "05-05-2023",
-    status: "Activo",
-    condition: "Traumatismo craneoencefálico",
-  },
-]
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 
 export default function PatientsPage() {
+  // Cargar pacientes desde localStorage
+  const [patients, setPatients] = useState(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("patients")
+      return stored ? JSON.parse(stored) : []
+    }
+    return []
+  })
+
+  // Guardar en localStorage cuando cambian los pacientes
+  useEffect(() => {
+    localStorage.setItem("patients", JSON.stringify(patients))
+  }, [patients])
+
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
+  const [open, setOpen] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
+  const [editId, setEditId] = useState<string | null>(null)
+
+  const [newPatient, setNewPatient] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    lastAppointment: "",
+    nextAppointment: "",
+    status: "Activo",
+    condition: "",
+  })
+
+  const handleOpenAdd = () => {
+    setNewPatient({
+      name: "",
+      email: "",
+      phone: "",
+      lastAppointment: "",
+      nextAppointment: "",
+      status: "Activo",
+      condition: "",
+    })
+    setIsEditing(false)
+    setOpen(true)
+  }
+
+  const handleEdit = (patient: any) => {
+    setNewPatient({ ...patient })
+    setIsEditing(true)
+    setEditId(patient.id)
+    setOpen(true)
+  }
+
+  const handleDelete = (id: string) => {
+    setPatients(patients.filter((p) => p.id !== id))
+  }
+
+  const handleSave = () => {
+    if (isEditing && editId) {
+      setPatients(
+        patients.map((p) =>
+          p.id === editId ? { ...newPatient, id: editId } : p
+        )
+      )
+    } else {
+      setPatients([
+        ...patients,
+        { ...newPatient, id: Date.now().toString() },
+      ])
+    }
+
+    setOpen(false)
+    setIsEditing(false)
+    setEditId(null)
+  }
 
   const filteredPatients = patients.filter((patient) => {
     const matchesSearch =
@@ -76,7 +108,8 @@ export default function PatientsPage() {
       patient.phone.includes(searchTerm) ||
       patient.condition.toLowerCase().includes(searchTerm.toLowerCase())
 
-    const matchesStatus = statusFilter === "all" || patient.status.toLowerCase() === statusFilter.toLowerCase()
+    const matchesStatus =
+      statusFilter === "all" || patient.status === statusFilter
 
     return matchesSearch && matchesStatus
   })
@@ -86,12 +119,13 @@ export default function PatientsPage() {
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold tracking-tight">Pacientes</h2>
         <div className="flex gap-2">
-          <Link href="/dashboard/doctor/patients/new">
-            <Button className="bg-teal-600 hover:bg-teal-700">
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Añadir Paciente
-            </Button>
-          </Link>
+          <Button
+            className="bg-teal-600 hover:bg-teal-700"
+            onClick={handleOpenAdd}
+          >
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Añadir Paciente
+          </Button>
           <Button variant="outline">
             <Download className="mr-2 h-4 w-4" />
             Exportar
@@ -99,112 +133,114 @@ export default function PatientsPage() {
         </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Gestión de Pacientes</CardTitle>
-          <CardDescription>
-            Ver y gestionar sus pacientes. Añada nuevos pacientes o actualice registros existentes.
-          </CardDescription>
-          <div className="flex flex-col sm:flex-row gap-4 pt-4">
-            <div className="flex w-full max-w-sm items-center space-x-2">
-              <Input
-                type="search"
-                placeholder="Buscar pacientes..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full"
-              />
-              <Button type="submit" size="icon" variant="ghost">
-                <Search className="h-4 w-4" />
-              </Button>
-            </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[180px]">
-                <Filter className="mr-2 h-4 w-4" />
-                <SelectValue placeholder="Filtrar por estado" />
+      <div className="flex gap-4">
+        <Input
+          placeholder="Buscar paciente..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Filtrar por estado" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos</SelectItem>
+            <SelectItem value="Activo">Activo</SelectItem>
+            <SelectItem value="Inactivo">Inactivo</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Nombre</TableHead>
+            <TableHead>Email</TableHead>
+            <TableHead>Teléfono</TableHead>
+            <TableHead>Última cita</TableHead>
+            <TableHead>Próxima cita</TableHead>
+            <TableHead>Estado</TableHead>
+            <TableHead>Condición</TableHead>
+            <TableHead>Acciones</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {filteredPatients.map((patient) => (
+            <TableRow key={patient.id}>
+              <TableCell>{patient.name}</TableCell>
+              <TableCell>{patient.email}</TableCell>
+              <TableCell>{patient.phone}</TableCell>
+              <TableCell>{patient.lastAppointment}</TableCell>
+              <TableCell>{patient.nextAppointment || "-"}</TableCell>
+              <TableCell>{patient.status}</TableCell>
+              <TableCell>{patient.condition}</TableCell>
+              <TableCell className="flex gap-2">
+                <Button size="icon" variant="ghost" onClick={() => handleEdit(patient)}>
+                  <Pencil className="w-4 h-4" />
+                </Button>
+                <Button size="icon" variant="ghost" onClick={() => handleDelete(patient.id)}>
+                  <Trash2 className="w-4 h-4 text-red-500" />
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{isEditing ? "Editar Paciente" : "Nuevo Paciente"}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Input
+              placeholder="Nombre"
+              value={newPatient.name}
+              onChange={(e) => setNewPatient({ ...newPatient, name: e.target.value })}
+            />
+            <Input
+              placeholder="Email"
+              value={newPatient.email}
+              onChange={(e) => setNewPatient({ ...newPatient, email: e.target.value })}
+            />
+            <Input
+              placeholder="Teléfono"
+              value={newPatient.phone}
+              onChange={(e) => setNewPatient({ ...newPatient, phone: e.target.value })}
+            />
+            <Input
+              placeholder="Última cita"
+              value={newPatient.lastAppointment}
+              onChange={(e) => setNewPatient({ ...newPatient, lastAppointment: e.target.value })}
+            />
+            <Input
+              placeholder="Próxima cita"
+              value={newPatient.nextAppointment}
+              onChange={(e) => setNewPatient({ ...newPatient, nextAppointment: e.target.value })}
+            />
+            <Input
+              placeholder="Condición"
+              value={newPatient.condition}
+              onChange={(e) => setNewPatient({ ...newPatient, condition: e.target.value })}
+            />
+            <Select
+              value={newPatient.status}
+              onValueChange={(value) => setNewPatient({ ...newPatient, status: value })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Estado" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
-                <SelectItem value="activo">Activos</SelectItem>
-                <SelectItem value="inactivo">Inactivos</SelectItem>
+                <SelectItem value="Activo">Activo</SelectItem>
+                <SelectItem value="Inactivo">Inactivo</SelectItem>
               </SelectContent>
             </Select>
+            <Button className="w-full mt-2 bg-teal-600 hover:bg-teal-700" onClick={handleSave}>
+              Guardar
+            </Button>
           </div>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nombre</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Teléfono</TableHead>
-                <TableHead>Condición</TableHead>
-                <TableHead>Última Cita</TableHead>
-                <TableHead>Próxima Cita</TableHead>
-                <TableHead>Estado</TableHead>
-                <TableHead className="text-right">Acciones</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredPatients.map((patient) => (
-                <TableRow key={patient.id}>
-                  <TableCell className="font-medium">{patient.name}</TableCell>
-                  <TableCell>{patient.email}</TableCell>
-                  <TableCell>{patient.phone}</TableCell>
-                  <TableCell>{patient.condition}</TableCell>
-                  <TableCell>{patient.lastAppointment}</TableCell>
-                  <TableCell>{patient.nextAppointment || "No programada"}</TableCell>
-                  <TableCell>
-                    <span
-                      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                        patient.status === "Activo" ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"
-                      }`}
-                    >
-                      {patient.status}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm">
-                          Acciones
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
-                          <Link href={`/dashboard/doctor/patients/${patient.id}`} className="w-full">
-                            Ver Perfil
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Link href={`/dashboard/doctor/patients/${patient.id}/edit`} className="w-full">
-                            Editar
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Link href={`/dashboard/doctor/patients/${patient.id}/records`} className="w-full">
-                            Ver Registros
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Link href={`/dashboard/doctor/appointments/new?patient=${patient.id}`} className="w-full">
-                            Programar Cita
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Link href={`/dashboard/doctor/rehabilitation/new?patient=${patient.id}`} className="w-full">
-                            Crear Programa
-                          </Link>
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
