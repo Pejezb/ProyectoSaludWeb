@@ -11,7 +11,7 @@ interface DoctorLayoutProps {
 export default function DoctorLayout({ children }: DoctorLayoutProps) {
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen flex-col">
+      <div className="flex min-h-screen flex-col w-full">
         <DoctorHeader />
         <div className="flex flex-1">
           <Sidebar>
